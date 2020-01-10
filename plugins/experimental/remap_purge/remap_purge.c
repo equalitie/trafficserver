@@ -86,7 +86,9 @@ init_purge_instance(PurgeInstance *purge)
     }
     fclose(file);
   } else {
-    TSError("[%s] Can not open file %s: %s (%d)", PLUGIN_NAME, purge->state_file, strerror(errno), errno);
+    // This was originally a TSError, but since the file only needs to be written later, let it happen.
+    // (the PurgeInstance fields are initialized to 0 elsewhere)
+    TSDebug(PLUGIN_NAME, "Can not open file %s: %s (%d)", purge->state_file, strerror(errno), errno);
   }
 
   purge->lock = TSMutexCreate();
@@ -272,8 +274,14 @@ TSRemapNewInstance(int argc, char *argv[], void **ih, char *errbuf, int errbuf_s
   argc--;
   argv++;
 
+  for(int i = 0; i < argc; i++) {
+    TSDebug(PLUGIN_NAME, "argv: %s", (char *)argv[i]);
+  }
+
   for (;;) {
     int opt = getopt_long(argc, (char *const *)argv, "", longopt, NULL);
+
+    TSDebug(PLUGIN_NAME, "getopt_long: %d %c", opt, opt);
 
     if (opt == -1) {
       break;
